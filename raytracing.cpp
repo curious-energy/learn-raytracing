@@ -5,6 +5,13 @@
 #include <vector>
 #include "geometry.h"
 
+
+struct Light {
+    Light(const vec3 &p,const float &i) : position(p), intensity(i) {}
+    vec3 position;
+    float intensity;
+};
+
 struct Material
 {
     Material(const vec3 &color) : diffuse_color(color) {}
@@ -54,7 +61,7 @@ bool scene_intersect(const vec3 &orig, const vec3 &dir, const std::vector<Sphere
     return spheres_dist < 1000;
 }
 
-vec3 cast_ray(const vec3 &orig, const vec3 &dir, const std::vector<Sphere> &spheres)
+vec3 cast_ray(const vec3 &orig, const vec3 &dir, const std::vector<Sphere> &spheres, const std::vector<Light> &lights)
 {
     vec3 point, N;
     Material matetial;
@@ -62,10 +69,17 @@ vec3 cast_ray(const vec3 &orig, const vec3 &dir, const std::vector<Sphere> &sphe
     if (!scene_intersect(orig, dir, spheres, point, N, matetial)) {
         return vec3{0.2, 0.7, 0.8};
     }
-    return matetial.diffuse_color;
+
+    float diffuse_light_intensity=0;
+    for (size_t i=0; i<lights.size(); i++) {
+        vec3 light_dir = (lights[i].position - point).normalize();
+        diffuse_light_intensity += lights[i].intensity * std::max(0.f, light_dir*N);
+    }
+
+    return matetial.diffuse_color * diffuse_light_intensity;
 }
 
-void render(const std::vector<Sphere> &spheres)
+void render(const std::vector<Sphere> &spheres, const std::vector<Light> &lights)
 {
     const int width = 1024;
     const int height = 768;
@@ -82,7 +96,7 @@ void render(const std::vector<Sphere> &spheres)
             float x =  (2 * (i + 0.5) / (float)width  - 1) * tan(fov / 2.) * width / (float)height;
             float y = -(2 * (j + 0.5) / (float)height - 1) * tan(fov / 2.);
             vec3 dir = vec3{x, y, -1}.normalize();
-            framebuffer[i + j * width] = cast_ray(vec3{0,0,0}, dir, spheres);
+            framebuffer[i + j * width] = cast_ray(vec3{0,0,0}, dir, spheres,  lights);
         }
     }
 
@@ -110,8 +124,11 @@ int main()
     spheres.push_back(Sphere(vec3{ -1, -1.5, -12}, 2, red_rubber));
     spheres.push_back(Sphere(vec3{1.5, -0.5, -18}, 3, red_rubber));
     spheres.push_back(Sphere(vec3{  7,    5, -18}, 4, ivory));
+
+    std::vector<Light> lights;
+    lights.push_back(Light(vec3{-20, 20, 20}, 1.5));
     
-    render(spheres);
+    render(spheres, lights);
 
     return 0;
 }
