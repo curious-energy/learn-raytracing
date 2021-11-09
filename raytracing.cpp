@@ -84,7 +84,20 @@ scene_intersect(const vec3 &orig, const vec3 &dir, const std::vector<Sphere> &sp
             material =spheres[i].material;
         }
     }
-    return spheres_dist < 1000;
+    // return spheres_dist < 1000;
+    float checkerboard_dist = std::numeric_limits<float>::max();
+    if (fabs(dir.y)>1e-3) {
+        float d = -( orig.y + 4) / dir.y; // checkerboard在Z=-4平面上
+        vec3 pt = orig + dir * d;
+        if (d > 0 && fabs(pt.x)<10 && pt.z>-30 && d<spheres_dist) {
+            checkerboard_dist = d;
+            hit =pt;
+            N = vec3{0, 1, 0};
+            material.diffuse_color = (int(.5*hit.x +1000) + int(.5*hit.z)) & 1 ? vec3{.3,.3,.3} : vec3{.3,.2,.1};
+            // material.diffuse_color = material.diffuse_color * .3;
+        }
+    }
+    return std::min(spheres_dist, checkerboard_dist) < 1000;
 }
 
 vec3
