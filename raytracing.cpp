@@ -80,6 +80,13 @@ vec3 cast_ray(const vec3 &orig, const vec3 &dir, const std::vector<Sphere> &sphe
     float diffuse_light_intensity = 0, specular_light_intentiy = 0;
     for (size_t i=0; i<lights.size(); i++) {
         vec3 light_dir = (lights[i].position - point).normalize();
+        float light_distance = (lights[i].position - point).norm();
+
+        vec3 shadow_orig = light_dir * N < 0? point - N * 1e-3 : point + N * 1e-3;
+        vec3 shadow_pt, shadow_N;
+        Material tmpmaterial;
+        if (scene_intersect(shadow_orig, light_dir, spheres, shadow_pt, shadow_N, tmpmaterial) && (shadow_pt - shadow_orig).norm() < light_distance)
+            continue;
 
         diffuse_light_intensity += lights[i].intensity * std::max(0.f, light_dir*N);
         specular_light_intentiy += powf(std::max(0.f, -reflect(-light_dir, N) * dir), material.specular_exponent) * lights[i].intensity;
