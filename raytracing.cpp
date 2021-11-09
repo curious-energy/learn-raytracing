@@ -18,7 +18,7 @@ struct Material
     Material(const float &r, const vec4 &a, const vec3 &color, const float &spec)
         : refractive_index(r), albedo(a), diffuse_color(color), specular_exponent(spec) {}
     // Material(): diffuse_color() {}
-    Material() : refractive_index(1), albedo{1, 0, 0, 0}, diffuse_color(), specular_exponent() {}
+    Material() : refractive_index(1), albedo(vec4{1, 0, 0, 0}), diffuse_color(vec3{0,0,0}), specular_exponent(0) {}
     
     float refractive_index;
     vec4 albedo;
@@ -44,9 +44,9 @@ struct Sphere
         float thc = sqrtf(radius * radius - d2);
         t0 = tca - thc;
         float t1 = tca + thc;
-        if (t0 < 0)
+        if (t0 < 1e-3)
             t0 = t1;
-        if (t0 < 0)
+        if (t0 < 1e-3)
             return false;
         return true;
     }
@@ -64,7 +64,7 @@ refract(const vec3 &I, const vec3 &N, const float &refractive_index) {
     }
     float eta = etai / etat;
     float k = 1 - eta * eta * (1 - cosi * cosi);
-    return k < 0 ? vec3{0,0,0} : I * eta + n * (eta - cosi - sqrtf(k));
+    return k < 0 ? vec3{0,0,0} : I * eta + n * (eta * cosi - sqrtf(k));
 }
 
 vec3
@@ -106,7 +106,7 @@ cast_ray(const vec3 &orig, const vec3 &dir, const std::vector<Sphere> &spheres, 
     vec3 point, N;
     Material material;
 
-    if ( depth > 3 || !scene_intersect(orig, dir, spheres, point, N, material)) {
+    if ( depth > 4 || !scene_intersect(orig, dir, spheres, point, N, material)) {
         return vec3{0.2, 0.7, 0.8};
     }
 
