@@ -87,9 +87,9 @@ scene_intersect(const vec3 &orig, const vec3 &dir, const std::vector<Sphere> &sp
     // return spheres_dist < 1000;
     float checkerboard_dist = std::numeric_limits<float>::max();
     if (fabs(dir.y)>1e-3) {
-        float d = -( orig.y + 4) / dir.y; // checkerboard在Z=-4平面上
+        float d = - ( orig.y + 4) / dir.y; // checkerboard在y=-4平面上
         vec3 pt = orig + dir * d;
-        if (d > 0 && fabs(pt.x)<10 && pt.z>-30 && d<spheres_dist) {
+        if (d > 1e-3 && fabs(pt.x)<10 && pt.z<-10 && pt.z>-30 && d<spheres_dist) {
             checkerboard_dist = d;
             hit =pt;
             N = vec3{0, 1, 0};
@@ -144,7 +144,7 @@ render(const std::vector<Sphere> &spheres, const std::vector<Light> &lights)
 {
     const int width = 1024;
     const int height = 768;
-    const int fov = M_PI / 2.;
+    const int fov = M_PI / 3.;
     // ! vector赋值用圆括号
     // std::vector<Vec3f> framebuffer(width*height);
     std::vector<vec3> framebuffer(width * height);
